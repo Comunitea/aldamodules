@@ -14,7 +14,7 @@
         "connector",
         "pms",
         "account_payment_partner",
-        "account_asset_management",
+        "account_asset",
         "onchange_helper",
     ],
     "data": [
