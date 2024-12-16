@@ -2,7 +2,7 @@
 <odoo>
     <template
         id="external_layout_background_footer_font_size"
-        inherit_id="web.external_layout_background"
+        inherit_id="web.external_layout_boxed"
     >
         <xpath
             expr="//div[@t-field='company.report_footer']/../.."
