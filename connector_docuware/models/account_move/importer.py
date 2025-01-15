@@ -157,7 +157,7 @@ class DocuwareMapper(Component):
         if company_id:
             context["default_company_id"] = company_id
             context["allowed_company_ids"] = [company_id]
-        journal = self.env["account.move"].with_context(context)._get_default_journal()
+        journal = self.env["account.move"].with_context(context)._search_default_journal()
         values["journal_id"] = journal.id
         onchange_values = (
             self.env["account.move"]
@@ -196,7 +196,7 @@ class DocuwareMapper(Component):
         for line in previous_invoice.invoice_line_ids:
             new_line_data = line.copy_data(
                 default={
-                    "asset_id": False,
+                    "asset_ids": False,
                     "price_unit": 0.0,
                     "pms_property_id": values.get("pms_property_id"),
                 }

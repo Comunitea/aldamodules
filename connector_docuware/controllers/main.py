@@ -44,7 +44,7 @@ class DocuwareWebhookController(http.Controller):
         )
         if not backend:
             raise Unauthorized("Wrong authentication")
-        document_data = http.request.jsonrequest
+        document_data = http.request.get_json_data()
         document_id = document_data.get("document_id")
         cabinet_id = document_data.get("cabinet_id")
         document_type = document_data.get("type")
