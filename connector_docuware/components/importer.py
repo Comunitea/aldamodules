@@ -153,8 +153,8 @@ class DocuwareImporter(AbstractComponent):
                     # commit (in a new cursor). Disable the warning.
                     self.env[
                         "base"
-                    ].flush()  # TODO FIXME check if and why flush is mandatory here
-                    if not getattr(threading.currentThread(), "testing", False):
+                    ].flush_model()  # TODO FIXME check if and why flush is mandatory here
+                    if not getattr(threading.current_thread(), "testing", False):
                         cr.commit()  # pylint: disable=invalid-commit
 
     def _check_in_new_connector_env(self):
