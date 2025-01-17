@@ -250,4 +250,6 @@ class DocuwareMapper(Component):
                 new_lines.append({"price_unit": source_vals.get("IMPORTE_TOTAL")})
 
         values["invoice_line_ids"] = [(0, 0, x) for x in new_lines]
+        if values.get("partner_bank_id"):
+            values["partner_bank_id"] = values.get("partner_bank_id").id
         return values
