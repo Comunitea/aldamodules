@@ -143,6 +143,19 @@ class DocuwareMapper(Component):
         )
         return {"cabinet_id": cabinet.id}
 
+    def get_journal_type_by_move_type(self,move_type):
+        """Obtiene el tipo de diario correspondiente a un tipo de movimiento."""
+        mapping = {
+            'out_invoice': 'sale',
+            'out_refund': 'sale',
+            'in_invoice': 'purchase',
+            'in_refund': 'purchase',
+            'bank': 'bank',
+            'cash': 'cash',
+            'entry': 'general',
+        }
+        return mapping.get(move_type, 'purchase')
+
     def finalize(self, map_record, values):
 
         source_vals = map_record.source
@@ -150,8 +163,10 @@ class DocuwareMapper(Component):
         company_id = values.get("company_id")
         property_id = values.get("pms_property_id")
         move_type = values.get("move_type")
+        journal_type = self.get_journal_type_by_move_type(move_type)
         context = dict(self.env.context)
         context["default_pms_property_id"] = property_id
+        context["default_journal_type"] = journal_type
         if move_type:
             context["default_move_type"] = move_type
         if company_id:
