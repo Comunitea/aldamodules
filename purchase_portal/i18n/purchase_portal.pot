@@ -1937,6 +1937,14 @@ msgid "You can't select lines from different properties"
 msgstr ""
 
 #. module: purchase_portal
+#. odoo-python
+#: code:addons/purchase_portal/controllers/prequest_json.py:0
+#: code:addons/purchase_portal/models/purchase_request.py:0
+#, python-format
+msgid "You cannot validate an empty purchase request."
+msgstr ""
+
+#. module: purchase_portal
 #: model:ir.model,name:purchase_portal.model_import_supplier_data_wizard
 msgid "import.supplier.data.wizard"
 msgstr ""

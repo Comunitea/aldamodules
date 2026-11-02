@@ -41,6 +41,11 @@ class StockPicking(models.Model):
 
     def _create_backorder(self):
         res = super(StockPicking, self)._create_backorder()
+        for backorder in res:
+            if backorder.property_id.partner_id:
+                backorder.message_subscribe(
+                    partner_ids=backorder.property_id.partner_id.ids
+                )
         text = self.env.context.get("backorder_message", False)
         if text:
             text = str(text) + "<br/> {}".format(
