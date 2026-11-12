@@ -41,13 +41,18 @@ class AccountMoveLine(models.Model):
         should not happen), the first one found is used.
         """
         hotel_plan = self.env.ref(
-            "pms.main_pms_analytic_plan", raise_if_not_found=False
+            "pms_account.analytic_plan_properties", raise_if_not_found=False
         )
         for line in self:
             hotel_account = self.env["account.analytic.account"]
             project_account = self.env["account.analytic.account"]
             if line.analytic_distribution and hotel_plan:
-                account_ids = [int(k) for k in line.analytic_distribution.keys()]
+                account_ids = [
+                    int(account_id)
+                    for distribution_key in line.analytic_distribution
+                    for account_id in distribution_key.split(",")
+                    if account_id.strip()
+                ]
                 accounts = self.env["account.analytic.account"].browse(account_ids)
                 for account in accounts:
                     if not hotel_account and account.plan_id == hotel_plan:

@@ -42,7 +42,7 @@ class AccountMoveBudgetLine(models.Model):
         compatibility.
         """
         hotel_plan = self.env.ref(
-            "pms.main_pms_analytic_plan", raise_if_not_found=False
+            "pms_account.analytic_plan_properties", raise_if_not_found=False
         )
         for line in self:
             if line.analytic_account_id and hotel_plan:
