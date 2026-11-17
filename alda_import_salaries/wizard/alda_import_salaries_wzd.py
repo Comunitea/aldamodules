@@ -1,8 +1,10 @@
 # © 2022 Comunitea
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import base64
+import io
 from datetime import datetime
 
+import openpyxl
 import xlrd
 
 from odoo import _, fields, models
@@ -71,12 +73,12 @@ class AldaImportSalariesWzd(models.TransientModel):
             analytic_code = f"{hotel_code}.{cost_center[3]}"
         else:
             pms_property = property_pool.search(
-                [("pms_property_code", "=", cost_center)]
+                [("ref", "=", cost_center)]
             )
             if not pms_property:
                 raise UserError(_("Any property with code %s", cost_center))
             return pms_property, None
-        pms_property = property_pool.search([("pms_property_code", "=", hotel_code)])
+        pms_property = property_pool.search([("ref", "=", hotel_code)])
         if not pms_property:
             raise UserError(_("Any property with code %s", hotel_code))
         sub_analytic = analytic_pool.search([("code", "=", analytic_code)], limit=1)
@@ -94,20 +96,34 @@ class AldaImportSalariesWzd(models.TransientModel):
             raise ValidationError(_("Please Select an .xls or .xlsx file"))
 
         decoded_data = base64.decodebytes(self.xlsx_file)
-        book = xlrd.open_workbook(file_contents=decoded_data)
+        if self.filename.lower().endswith(".xlsx"):
+            workbook = openpyxl.load_workbook(
+                io.BytesIO(decoded_data), read_only=True, data_only=True
+            )
+            rows = list(workbook.active.iter_rows(values_only=True))
+        else:
+            workbook = xlrd.open_workbook(file_contents=decoded_data)
+            sheet = workbook.sheet_by_index(0)
+            rows = [sheet.row_values(rownum) for rownum in range(sheet.nrows)]
         account_pool = self.env["account.account"]
-        sheet = book.sheet_by_index(0)
         last_move_name = False
         move_lines = []
         move_date = False
         moves_to_create = []
         newmove_vals = {}
-        tax_template = self.env.ref("l10n_es.account_tax_template_p_irpf21t")
-        tax = self.journal_id.company_id.get_taxes_from_templates(tax_template)
-        for rownum in range(sheet.nrows):
-            row = sheet.row_values(rownum)
+        tax = (
+            self.env["account.chart.template"]
+            .with_company(self.journal_id.company_id)
+            .ref("account_tax_template_p_irpf21t")
+        )
+        for rownum, row in enumerate(rows):
             if not move_date:
-                move_date = datetime(*xlrd.xldate_as_tuple(row[1], book.datemode))
+                if isinstance(row[1], datetime):
+                    move_date = row[1]
+                else:
+                    move_date = datetime(
+                        *xlrd.xldate_as_tuple(row[1], workbook.datemode)
+                    )
 
             if last_move_name != row[0]:
                 if last_move_name:
@@ -133,7 +149,7 @@ class AldaImportSalariesWzd(models.TransientModel):
             # Build analytic distribution: hotel plan is always required.
             # When a sub-analytic applies (different plan), both are included at 100%.
             if row[2][:1] == "6":
-                analytic_distribution = {pms_property.analytic_account_id.id: 100}
+                analytic_distribution = {pms_property.analytic_id.id: 100}
                 if sub_analytic:
                     analytic_distribution[sub_analytic.id] = 100
             else:
@@ -154,13 +170,13 @@ class AldaImportSalariesWzd(models.TransientModel):
                             lambda x: x.repartition_type == "tax"
                         ).id
                         or False,
-                        "pms_property_id": pms_property.id,
+                        "property_ids": [(6, 0, pms_property.ids)],
                         "analytic_distribution": analytic_distribution,
                     },
                 )
             )
 
-            if rownum == sheet.nrows - 1:
+            if rownum == len(rows) - 1:
                 newmove_vals["line_ids"] = move_lines
                 moves_to_create.append(newmove_vals)
 

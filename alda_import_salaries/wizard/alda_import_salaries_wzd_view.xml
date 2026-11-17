@@ -36,7 +36,7 @@
 
     <menuitem
         id="import_salaries_menu"
-        parent="account.menu_finance_entries_actions"
+        parent="account.menu_finance_entries"
         name="Import Alda's Salaries"
         sequence="12"
         action="import_salaries_action"
