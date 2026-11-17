@@ -44,9 +44,9 @@ class AccountJournal(models.Model):
     def _group_outstanding_payments_for_journal(self):
         self.ensure_one()
         # Cuentas de pendientes (company-level fallbacks)
-        debit_acc = self.company_id.account_journal_payment_debit_account_id
-        credit_acc = self.company_id.account_journal_payment_credit_account_id
-        account_ids = [acc.id for acc in (debit_acc, credit_acc) if acc]
+        debit_accounts = self._get_journal_inbound_outstanding_payment_accounts()
+        credit_accounts = self._get_journal_outbound_outstanding_payment_accounts()
+        account_ids = (debit_accounts | credit_accounts).ids
         if not account_ids:
             return
 
@@ -88,9 +88,6 @@ class AccountJournal(models.Model):
             "ref": _("Auto grouped payments %s - %s")
             % (self.name, fields.Date.to_string(gdate)),
             "line_ids": [],
-            "pms_property_id": self.pms_property_ids
-            and self.pms_property_ids[0].id
-            or False,
         }
 
         total_debit = 0.0
@@ -162,7 +159,6 @@ class AccountJournal(models.Model):
                 },
             )
         )
-
         move = Move.create(vals)
         move.action_post()
 

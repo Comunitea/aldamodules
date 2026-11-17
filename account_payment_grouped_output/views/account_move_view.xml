@@ -15,7 +15,7 @@
                     class="oe_stat_button"
                     icon="fa-bank"
                     string="Show Transaction"
-                    attrs="{'invisible': [('reconciled_statement_line_id', '=', False)]}"
+                    invisible="not reconciled_statement_line_id"
                 />
             </xpath>
         </field>
